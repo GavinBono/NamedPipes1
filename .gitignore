@@ -1,0 +1,9 @@
+*.o
+client
+server
+*.exe
+*.out
+*.log
+received/
+*.bin
+*.dat
