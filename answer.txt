@@ -1,0 +1,27 @@
+1. Create files of varying sizes and record the time it takes to transfer them. Visualize the execution time vs file size. Does the trend make sense?
+
+size_bytes,time_seconds
+1,048,576,0.562
+3,145,728,1.373
+5,242,880,1.775
+8,388,608,2.892
+12,582,912,3.993
+20,971,520,5.866
+52,428,800,11.734
+104,857,600,22.392
+
+Method: I created test files in BIMDC using `truncate` (1–100 MiB) and measured wall-clock time for each transfer with `time ./client -m 256 -f <file>`.
+I plotted size (MiB) vs transfer time (s). The plot is in the repo under "answer.pdf"
+
+Result: The relationship is approximately linear:
+    time ≈ 0.216 × size_MiB + 0.951  seconds
+This implies a sustained throughput of about 4.63 MiB/s (1 / slope).
+Small files pay a fixed startup cost of ~0.95s (fork/exec, initial messages, etc.).
+
+Yes, the trend makes sense. After the small fixed overhead, transfer time scales roughly proportional to file size.
+If I increase the buffer (e.g., `-m 5000`), the line slope should drop (fewer chunks meaning fewer syscalls) until pipe/disk throughput becomes the limiting factor.
+
+2. What is the main bottleneck that stops the code from transferring files faster? Describe in one or two sentences
+
+The main bottleneck is by the request/response over a single named pipe, where each chunk incurs syscalls, context switches, and kernal to user copies.
+Once the buffer is large enough to reduce per-chunk overhead, throughput lpateaus at the FIFO/disc I/O bandwidth, so bigger buffers don't help further.
