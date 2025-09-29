@@ -15,6 +15,16 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <iomanip>
+#include <unistd.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <string>
 
 using namespace std;
 //helpers
@@ -46,7 +56,7 @@ static __int64_t request_file_size(FIFORequestChannel& ch, const std::string& fn
 	return sz;
 }
 static void ensure_dir(const char* path) {
-	struct stat st();
+	struct stat st{};
 	if(stat(path, &st) == -1) {
 		mkdir(path, 0777);
 	}
@@ -57,7 +67,7 @@ int main (int argc, char *argv[]) {
 	int p = -1;
 	double t = -1.0;
 	int e = -1;
-	buffercapacity = MAX_MESSAGE;
+	int buffercapacity = MAX_MESSAGE;
 	bool use_new_channel = false;
 	std::string filename;
 	
@@ -122,7 +132,7 @@ int main (int argc, char *argv[]) {
 		std::ofstream ofs("x1.csv");
 		ofs << std::fixed << std::setprecision(3);
 		for(int i=0; i<1000; ++i) {
-			double ts=i * 0.004;
+			double ts = (i * 4) / 1000.0;
 			datamsg r1(p,ts,1), r2(p,ts,2);
 			double v1=0, v2=0; 
 			work->cwrite(&r1, sizeof(r1)); work->cread(&v1, sizeof(v1));
@@ -143,7 +153,7 @@ int main (int argc, char *argv[]) {
 		}
 		__int64_t offset = 0;
 		while(offset < fsize) {
-			int chunk = (int_ std::min<__int64_t>(buffercapacity, fsize - offset));
+			int chunk = (int) std::min<__int64_t>(buffercapacity, fsize - offset);
 			std::vector<char> reply(chunk);
 			packed_file_request(*work, filename, offset, chunk, reply.data());
 			fwrite(reply.data(), 1, chunk, out);
